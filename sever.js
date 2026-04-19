@@ -10,9 +10,9 @@ const CLIENT_ID     = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI  = process.env.REDIRECT_URI;
 
-// Health-check / landing page so Render sees a 200 on '/'
+// Health‑check / landing page so Render sees a 200 on '/'
 app.get('/', (req, res) => {
-  res.send('✅ Google-Auth server is running');
+  res.send('✅ Google‑Auth server is running');
 });
 
 // OAuth callback (called by Google after login)
@@ -25,20 +25,16 @@ app.get('/auth/google/callback', async (req, res) => {
   }
 
   try {
-    // ✅ FIX: Send params in the POST body as x-www-form-urlencoded, not as query params
-    const tokenResponse = await axios.post(
-      'https://oauth2.googleapis.com/token',
-      new URLSearchParams({
-        code:          authCode,
-        client_id:     CLIENT_ID,
+    // Exchange authorization code for access token
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', null, {
+      params: {
+        code: authCode,
+        client_id: CLIENT_ID,
         client_secret: CLIENT_SECRET,
-        redirect_uri:  REDIRECT_URI,
-        grant_type:    'authorization_code',
-      }).toString(),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }
-    );
+        redirect_uri: REDIRECT_URI,
+        grant_type: 'authorization_code',
+      },
+    });
 
     const { access_token } = tokenResponse.data;
 
@@ -55,8 +51,7 @@ app.get('/auth/google/callback', async (req, res) => {
     res.redirect(deepLink);
 
   } catch (error) {
-    // ✅ FIX: Log Google's actual error response instead of the raw Axios object
-    console.error('Token exchange failed:', error.response?.data || error.message);
+    console.error('Error during authentication:', error);
     res.status(500).send('Authentication failed.');
   }
 });
@@ -78,9 +73,3 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
 });
-
-// ✅ FIX: Keep-alive ping every 14 minutes to prevent Render free-tier cold starts
-const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-setInterval(() => {
-  axios.get(SELF_URL).catch(() => {}); // Silent fail is intentional
-}, 14 * 60 * 1000);
