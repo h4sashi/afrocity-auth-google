@@ -75,7 +75,7 @@ app.get('/auth/google/callback', async (req, res) => {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
       </head>
       <body>
-        <p>Login successful — returning to the game ...</p>
+        <p>✅ Login successful — Please return to Afrocity PI 2 🔥</p>
    
       </body>
     </html>`;
