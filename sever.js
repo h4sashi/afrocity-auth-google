@@ -63,9 +63,33 @@ app.get('/auth/google/callback', async (req, res) => {
       name: userResponse.data.name,
     });
 
-    // ✅ Redirect user back to Unity using deep link
+    // ✅ Attempt to return user to Unity using deep link.
+    // Some browsers block direct redirects to custom URI schemes, so respond
+    // with a small HTML page that tries the deep link and shows a fallback.
     const deepLink = `afrocity://auth?state=${state}`;
-    res.redirect(deepLink);
+    const html = `<!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Auth successful</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+      </head>
+      <body>
+        <p>Login successful — returning to the game app...</p>
+        <script>
+          (function() {
+            var deepLink = ${JSON.stringify(deepLink)};
+            // Try to open the app via deep link
+            window.location = deepLink;
+            // If the app doesn't open, show a fallback clickable link
+            setTimeout(function() {
+              document.body.innerHTML = '<p>Login successful. If the game did not open automatically, <a href="' + deepLink + '">click here to return to the game</a>.</p>';
+            }, 1500);
+          })();
+        </script>
+      </body>
+    </html>`;
+    res.send(html);
 
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Error during authentication:`, error);
