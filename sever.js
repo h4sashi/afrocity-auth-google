@@ -10,6 +10,15 @@ const CLIENT_ID     = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI  = process.env.REDIRECT_URI;
 
+// Simple timestamped logger helper
+const log = (msg, obj) => {
+  if (obj) {
+    console.log(`[${new Date().toISOString()}] ${msg}`, obj);
+  } else {
+    console.log(`[${new Date().toISOString()}] ${msg}`);
+  }
+};
+
 // Health‑check / landing page so Render sees a 200 on '/'
 app.get('/', (req, res) => {
   res.send('✅ Google‑Auth server is running');
@@ -25,6 +34,7 @@ app.get('/auth/google/callback', async (req, res) => {
   }
 
   try {
+    log('OAuth callback received', { state, ip: req.ip });
     // Exchange authorization code for access token
     const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', null, {
       params: {
@@ -45,13 +55,20 @@ app.get('/auth/google/callback', async (req, res) => {
 
     // Save profile in memory keyed by state
     userProfiles[state] = userResponse.data;
+    // Log basic non-sensitive profile info for debugging/monitoring
+    log('Saved profile', {
+      state,
+      id: userResponse.data.id,
+      email: userResponse.data.email,
+      name: userResponse.data.name,
+    });
 
     // ✅ Redirect user back to Unity using deep link
     const deepLink = `afrocity://auth?state=${state}`;
     res.redirect(deepLink);
 
   } catch (error) {
-    console.error('Error during authentication:', error);
+    console.error(`[${new Date().toISOString()}] Error during authentication:`, error);
     res.status(500).send('Authentication failed.');
   }
 });
@@ -60,16 +77,20 @@ app.get('/auth/google/callback', async (req, res) => {
 app.get('/getProfile', (req, res) => {
   const state = req.query.state;
 
+  log('Profile request received', { state, ip: req.ip });
+
   if (state && userProfiles[state]) {
     const profile = userProfiles[state];
     delete userProfiles[state]; // Clear memory
+    log('Serving profile to requester', { state, id: profile.id, email: profile.email, name: profile.name });
     res.json(profile);
   } else {
+    log('Profile not found for state', { state });
     res.status(404).send('Profile not found.');
   }
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
+  log(`✅ Server is running on port ${PORT}`);
 });
