@@ -47,7 +47,7 @@ app.get('/auth/google/callback', async (req, res) => {
     userProfiles[state] = userResponse.data;
 
     // ✅ Redirect user back to Unity using deep link
-    const deepLink = `mygame://auth?state=${state}`;
+    const deepLink = `afrocity://auth?state=${state}`;
     res.redirect(deepLink);
 
   } catch (error) {
