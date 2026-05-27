@@ -75,18 +75,8 @@ app.get('/auth/google/callback', async (req, res) => {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
       </head>
       <body>
-        <p>Login successful — returning to the game app...</p>
-        <script>
-          (function() {
-            var deepLink = ${JSON.stringify(deepLink)};
-            // Try to open the app via deep link
-            window.location = deepLink;
-            // If the app doesn't open, show a fallback clickable link
-            setTimeout(function() {
-              document.body.innerHTML = '<p>Login successful. If the game did not open automatically, <a href="' + deepLink + '">click here to return to the game</a>.</p>';
-            }, 1500);
-          })();
-        </script>
+        <p>Login successful — returning to the game ...</p>
+   
       </body>
     </html>`;
     res.send(html);
